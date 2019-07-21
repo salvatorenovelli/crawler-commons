@@ -1,5 +1,14 @@
 language: java
-
 before_deploy:
-  - mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
-  - export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep -v '\[')
+- mvn help:evaluate -N -Dexpression=project.version|grep -v '\['
+- export project_version=$(mvn help:evaluate -N -Dexpression=project.version|grep
+  -v '\[')
+deploy:
+  provider: releases
+  api_key:
+    secure: L+GplR5LHV1EYLQ0IS7GI02MtZO0IbiC91QykbVK+lCHtbRsy1t4mtjAeZ9njqCYpMQ5xUeKrb5aL4bx1OothQ0vuS5g8uDYAAv9G0smMOVV1Q2trNSgnF+4TXNuSsEY3gTzS1SfUZhvVEnZNGSDXBsRchAghkGpn+2HpbJz2M3G47RWRnpkc/SUsdyPn3LXFuXXYmcb3+eBiqrCOa38MZB9eA/Ek+s4I+O0vVnPpuryhGqZRtjN796SYsSMOnRj8QAtU048NyduoQLEv8mW1vMy7lju3gSagaI64x95UkK5hKG/VtCR8hATAqoqb3c/2bCymsa+zx3rwwqyJnM8Q3TtjE/z6lBkEIpmSa8SXPDBqmRWJW8r16h1Qp5ZMON98h18qFZaT2UB0yHR5frpSuIg7oZDQdncs8Jn3uMsGh4W00JN+QDa2w+DiqaH5tNzHq35dob2hwU7lHqNSfWL8g+s4ZhSDcA/2++OH4lDKQlfSqT/nHwFIvqxqrXZPvZzq5VRq5QQNooT0A41msHhMnO+/mVqzctfdHQGcEzjnCoZWHCaZ5lhpwq1JQE7DO5+vL+aFog/xq/s7mS9BNJMn2oVTMTkxgvMI7ebjgFvd7K+HU4Jfy0YKl5SGjNNJ/XZ2bQDYhhTwhf2cqtFcloOWg3VvFNE5WRS7K44Mivxd7g=
+  file:
+    - target/crawler-commons-$project_version.jar
+    - target/crawler-commons-$project_version-sources.jar
+  on:
+    repo: salvatorenovelli/crawler-commons

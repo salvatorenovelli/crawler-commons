@@ -1,0 +1,109 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+}
+
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+group = 'com.myseotoolbox'
+version = '3.1.0'
+project.archivesBaseName = rootProject.name
+
+java {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+  
+}
+
+artifacts {
+    archives jar, javadocJar, sourcesJar
+}
+
+signing {
+
+    def signingKey = findProperty("signingKey")
+    if (signingKey != null) {
+        //In CI we have the key stored in ORG_GRADLE_PROJECT_signingKey instead of accessing file specified in
+        // local gradle.properties
+        def signingPassword = findProperty("signingKeyPassword")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+    sign publishing.publications
+}
+
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+}
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'Crawler Commons - by My SEO Toolbox'
+                description = 'A library to abstract Crawler Common functions'
+                url = 'https://github.com/salvatorenovelli/crawler-commons'
+
+                developers {
+                    developer {
+                        id = 'snovelli'
+                        name = 'Salvatore'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git:github.com:salvatorenovelli/crawler-commons.git'
+                    developerConnection = 'scm:git:git:github.com:salvatorenovelli/crawler-commons.git'
+                    url = 'https://github.com/salvatorenovelli/crawler-commons'
+                }
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "OSSRH"
+            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            //url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+
+            credentials {
+                username = findProperty("ossrhUsername")
+                password = findProperty("ossrhPassword")
+            }
+        }
+    }
+}

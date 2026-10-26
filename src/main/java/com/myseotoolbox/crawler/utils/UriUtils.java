@@ -3,15 +3,16 @@ package com.myseotoolbox.crawler.utils;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.HttpUrl;
 
 import javax.annotation.Nullable;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,8 +27,8 @@ public class UriUtils {
 
     public static final int MAX_URL_LEN = 1000;
     private static final Escaper ESCAPER = UrlEscapers.urlFragmentEscaper();
-    private static final Map<String, String> DEFAULT_PORTS = Map.of("http", "80", "https", "443");
-    private static final Pattern AUTHORITY = Pattern.compile("(?<userInfo>.*@)?(?<host>[^@]*?)(?::(?<port>\\d*))?");
+    private static final Set<String> HTTP_SCHEMES = Set.of("http", "https");
+    private static final Pattern IP_LITERAL_HOST = Pattern.compile("(?<beforeHost>(?:[^:/?#]+:)?//(?:[^/?#@]*@)?)\\[(?<address>[^]/?#]*)](?<afterHost>.*)", Pattern.DOTALL);
 
     public static Optional<URI> toValidUri(String uriStr) {
 
@@ -40,11 +41,11 @@ public class UriUtils {
 
         try {
             String decoded = UrlDecoder.decode(uriStr);
-            String transCoded = ESCAPER.escape(decoded);
+            String transCoded = escape(decoded);
 
             URI uri = new URI(transCoded);
 
-            return Optional.of(normaliseSchemeBased(uri));
+            return Optional.of(normalise(uri));
         } catch (URISyntaxException e) {
             log.debug("Invalid link: '{}'. {}", uriStr, e.getMessage());
             return Optional.empty();
@@ -52,29 +53,27 @@ public class UriUtils {
 
     }
 
+    // RFC 3986 3.2.2: the brackets around an IP literal host are syntax, so they stay unescaped; anywhere else they are escaped
+    private static String escape(String decoded) {
+        Matcher ipLiteralHost = IP_LITERAL_HOST.matcher(decoded);
+        if (!ipLiteralHost.matches()) return ESCAPER.escape(decoded);
+        return ESCAPER.escape(ipLiteralHost.group("beforeHost"))
+                + "[" + ESCAPER.escape(ipLiteralHost.group("address")) + "]"
+                + ESCAPER.escape(ipLiteralHost.group("afterHost"));
+    }
+
     /**
-     * RFC 3986 6.2.3 scheme-based normalisation for http and https: an empty path becomes "/", and the scheme's
-     * default port (compared as a number) or an empty port is removed; a URL with no host is left as it is. That is
-     * what a browser requests and what Google reports; java.net.URI keeps the forms apart, so without this one page
-     * is crawled and stored under several URLs. Host and port are read from the authority text because java.net.URI
-     * gives neither for a host name it rejects, such as one with an underscore.
+     * For http and https, the URL as a browser's URL parser (WHATWG) normalises it before sending the request: the
+     * scheme and the host are lower-cased, a non-ASCII host becomes punycode, an empty path becomes "/", the scheme's
+     * default port is removed and "." and ".." path segments are resolved. That is what a browser requests and what
+     * Google reports; java.net.URI keeps the forms apart, so without this one page is crawled and stored under several
+     * URLs. A URL with no authority, or one the browser parser refuses, is left as it is.
      */
-    public static URI normaliseSchemeBased(URI uri) {
+    public static URI normalise(URI uri) {
         if (uri.getScheme() == null || uri.getRawAuthority() == null) return uri;
-        String defaultPort = DEFAULT_PORTS.get(uri.getScheme().toLowerCase());
-        if (defaultPort == null) return uri;
-
-        Matcher authorityParts = AUTHORITY.matcher(uri.getRawAuthority());
-        if (!authorityParts.matches() || authorityParts.group("host").isEmpty()) return uri;
-        String port = authorityParts.group("port");
-        boolean removePort = port != null && (port.isEmpty() || port.replaceFirst("^0+", "").equals(defaultPort));
-        String authority = removePort ? Objects.toString(authorityParts.group("userInfo"), "") + authorityParts.group("host") : uri.getRawAuthority();
-        if (authority.equals(uri.getRawAuthority()) && !uri.getRawPath().isEmpty()) return uri;
-
-        String path = uri.getRawPath().isEmpty() ? "/" : uri.getRawPath();
-        String query = uri.getRawQuery() == null ? "" : "?" + uri.getRawQuery();
-        String fragment = uri.getRawFragment() == null ? "" : "#" + uri.getRawFragment();
-        return URI.create(uri.getScheme() + "://" + authority + path + query + fragment);
+        if (!HTTP_SCHEMES.contains(uri.getScheme().toLowerCase(Locale.ROOT))) return uri;
+        HttpUrl httpUrl = HttpUrl.parse(uri.toString());
+        return httpUrl == null ? uri : httpUrl.uri();
     }
 
     /**

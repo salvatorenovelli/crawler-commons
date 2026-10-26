@@ -1,6 +1,6 @@
 # Publishing
 
-A release is pushing a `v<version>` tag, e.g. `git tag v1.1.1 && git push origin v1.1.1`.
+A release is pushing a `v<version>` tag, e.g. `git tag v1.2.0 && git push origin v1.2.0`.
 The GitHub action `.github/workflows/gradle-publish.yaml` builds, signs and publishes to the
 Central Portal OSSRH staging API, then uploads the staging repository to the Central Portal.
 

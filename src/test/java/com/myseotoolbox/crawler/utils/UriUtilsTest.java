@@ -75,6 +75,11 @@ public class UriUtilsTest {
     }
 
     @Test
+    public void shouldEscapeBracketsInPathAndQuery() {
+        assertThat(UriUtils.toValidUri("https://example.com/[page]?key=[value]").get().toString(), is("https://example.com/%5Bpage%5D?key=%5Bvalue%5D"));
+    }
+
+    @Test
     public void shouldNormaliseRootPath() {
         assertThat(UriUtils.toValidUri("https://example.com").get().toString(), is("https://example.com/"));
     }
@@ -102,6 +107,11 @@ public class UriUtilsTest {
     @Test
     public void shouldNotNormaliseNonRootPath() {
         assertThat(UriUtils.toValidUri("https://example.com/folder").get().toString(), is("https://example.com/folder"));
+    }
+
+    @Test
+    public void shouldRemoveDotSegments() {
+        assertThat(UriUtils.toValidUri("https://example.com/a/../b/./c").get().toString(), is("https://example.com/b/c"));
     }
 
     @Test
@@ -145,6 +155,31 @@ public class UriUtilsTest {
     }
 
     @Test
+    public void shouldNotRemovePortZero() {
+        assertThat(UriUtils.toValidUri("http://example.com:0/").get().toString(), is("http://example.com:0/"));
+    }
+
+    @Test
+    public void shouldLowerCaseScheme() {
+        assertThat(UriUtils.toValidUri("HTTPS://example.com/page").get().toString(), is("https://example.com/page"));
+    }
+
+    @Test
+    public void shouldLowerCaseHost() {
+        assertThat(UriUtils.toValidUri("https://EXAMPLE.Com/page").get().toString(), is("https://example.com/page"));
+    }
+
+    @Test
+    public void shouldNotLowerCaseUserInfoPathOrQuery() {
+        assertThat(UriUtils.toValidUri("https://User:Pass@example.com/Page?Key=Value").get().toString(), is("https://User:Pass@example.com/Page?Key=Value"));
+    }
+
+    @Test
+    public void shouldLowerCaseSchemeAndHostAndRemoveDefaultPortAndNormaliseRootPath() {
+        assertThat(UriUtils.toValidUri("HTTP://Example.COM:80").get().toString(), is("http://example.com/"));
+    }
+
+    @Test
     public void shouldRemoveDefaultPortOfHostWithUnderscore() {
         assertThat(UriUtils.toValidUri("http://my_host.example.com:80/page").get().toString(), is("http://my_host.example.com/page"));
     }
@@ -155,8 +190,38 @@ public class UriUtilsTest {
     }
 
     @Test
+    public void shouldLowerCaseHostWithUnderscore() {
+        assertThat(UriUtils.toValidUri("http://My_Host.Example.com/page").get().toString(), is("http://my_host.example.com/page"));
+    }
+
+    @Test
+    public void shouldConvertNonAsciiHostToPunycode() {
+        assertThat(UriUtils.toValidUri("http://MÜNCHEN.de/").get().toString(), is("http://xn--mnchen-3ya.de/"));
+    }
+
+    @Test
+    public void shouldLowerCaseIpv6HostAndRemoveDefaultPort() {
+        assertThat(UriUtils.normalise(URI.create("http://[FE80::A]:80/page")).toString(), is("http://[fe80::a]/page"));
+    }
+
+    @Test
+    public void shouldKeepBracketsOfIpv6HostAndLowerCaseIt() {
+        assertThat(UriUtils.toValidUri("http://[FE80::A]:8080/p").get().toString(), is("http://[fe80::a]:8080/p"));
+    }
+
+    @Test
+    public void shouldKeepBracketsOfIpv6HostAndRemoveDefaultPort() {
+        assertThat(UriUtils.toValidUri("https://[::1]:443").get().toString(), is("https://[::1]/"));
+    }
+
+    @Test
     public void shouldNotNormaliseUrlWithoutHost() {
         assertThat(UriUtils.toValidUri("http://:80/page").get().toString(), is("http://:80/page"));
+    }
+
+    @Test
+    public void shouldNotNormaliseUrlWithNonNumericPort() {
+        assertThat(UriUtils.toValidUri("http://Example.com:ABC/page").get().toString(), is("http://Example.com:ABC/page"));
     }
 
     @Test

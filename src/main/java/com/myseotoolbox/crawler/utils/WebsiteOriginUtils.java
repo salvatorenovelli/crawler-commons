@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static com.myseotoolbox.crawler.utils.PathMatcher.isSubPath;
-import static com.myseotoolbox.crawler.utils.UriUtils.normaliseSchemeBased;
+import static com.myseotoolbox.crawler.utils.UriUtils.normalise;
 
 
 public class WebsiteOriginUtils {
@@ -96,6 +96,6 @@ public class WebsiteOriginUtils {
     }
 
     public static URI extractOrigin(URI source) {
-        return normaliseSchemeBased(source.resolve("/"));
+        return normalise(source.resolve("/"));
     }
 }

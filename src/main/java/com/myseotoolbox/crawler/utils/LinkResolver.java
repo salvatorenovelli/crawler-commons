@@ -2,7 +2,7 @@ package com.myseotoolbox.crawler.utils;
 
 import java.net.URI;
 
-import static com.myseotoolbox.crawler.utils.UriUtils.normaliseSchemeBased;
+import static com.myseotoolbox.crawler.utils.UriUtils.normalise;
 
 /*
  * Unfortunately, neither URL nor URI behave like a browser would when resolving links...
@@ -11,7 +11,7 @@ public class LinkResolver {
 
 
     public static URI resolve(URI baseUri, URI linkUri) {
-        return normaliseSchemeBased(resolveLikeABrowser(baseUri, linkUri));
+        return normalise(resolveLikeABrowser(baseUri, linkUri));
     }
 
     private static URI resolveLikeABrowser(URI baseUri, URI linkUri) {

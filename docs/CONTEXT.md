@@ -36,11 +36,14 @@ With this folder checked out next to the service, Gradle substitutes the depende
 `com.myseotoolbox:crawler-commons:<version>` with this source, so an edit here is compiled into the
 service's build and test run with no publish and no version bump. Without the folder (CI, a fresh
 checkout) the service uses the published version it names. `./gradlew dependencies` in the service
-shows `com.myseotoolbox:crawler-commons:1.1.0 -> project :crawler-commons` when the local source is
+shows `com.myseotoolbox:crawler-commons:1.1.1 -> project :crawler-commons` when the local source is
 in use.
 
-Publishing to Maven Central is described in `README_PUBLISH.md`. After a change here, publish a new
-version and bump the version string in each consumer, or CI builds against the old one.
+A release is pushing a `v<version>` tag (for example `v1.1.1`): the GitHub action
+`.github/workflows/gradle-publish.yaml` builds, publishes to the OSSRH staging API and uploads the
+staging repository to the Central Portal, which releases it to Maven Central. The publishing notes are
+in `docs/README_PUBLISH.md`. After a change here, publish a new version and bump the version string in
+each consumer, or CI builds against the old one.
 
 ## Gotchas
 

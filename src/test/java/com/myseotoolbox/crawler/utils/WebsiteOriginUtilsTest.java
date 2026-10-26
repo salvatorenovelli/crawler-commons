@@ -83,6 +83,11 @@ public class WebsiteOriginUtilsTest {
     }
 
     @Test
+    public void extractOriginShouldRemoveDefaultPort() {
+        assertThat(extractOrigin(create("https://host:443/something")), is(URI.create("https://host/")));
+    }
+
+    @Test
     public void isValidOriginShouldFilterNull() {
         assertFalse(isValidOrigin(null));
     }

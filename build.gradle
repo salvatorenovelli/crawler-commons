@@ -11,8 +11,10 @@ java {
 }
 
 group = 'com.myseotoolbox'
-version = '1.0.1'
-project.archivesBaseName = rootProject.name
+version = '1.1.0'
+base {
+    archivesName = rootProject.name
+}
 
 java {
     sourceCompatibility = "17"
@@ -25,13 +27,18 @@ repositories {
 
 dependencies {
     implementation 'org.springframework:spring-core:6.1.3'
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.junit.vintage:junit-vintage-engine:5.8.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.1'
-}
+    implementation 'com.google.guava:guava:33.2.0-jre'
+    implementation 'org.slf4j:slf4j-api:2.0.13'
 
-artifacts {
-    archives jar, javadocJar, sourcesJar
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
+
+    testImplementation platform('org.junit:junit-bom:5.10.1')
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.hamcrest:hamcrest:2.2'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 signing {
